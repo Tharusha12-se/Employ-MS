@@ -15,19 +15,29 @@ const Login = () => {
     // for cookie
     axios.defaults.withCredentials = true;
 
+    const [error, setError] = useState(null)
     const handleSubmit = (event) => {
         event.preventDefault();
         console.log(values);
         axios.post('http://localhost:3000/auth/adminlogin', values)
         .then(result => {
-           navigate('/dashboard');
+
+            if(result.data.loginStatus){
+                navigate('/dashboard')
+            }else{
+                setError(result.data.Error)
+            }
         })
+
         .catch(err => console.log(err)); 
     }
 
   return (
     <div className='d-flex justify-content-center align-items-center vh-100 loginPage'>
         <div className='p-3 rounded w-25 border loginForm'>
+            <div className='text-warning'>
+               {error && error}
+            </div>
             <h1>Login Page</h1>
             <form onSubmit={handleSubmit}>
                <div className='mb-3'>

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link} from 'react-router-dom'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 
@@ -6,7 +6,6 @@ const Employee = () => {
   const [employee, setEmployee] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const navigate = useNavigate()
 
   useEffect(() => {
     axios.get('http://localhost:3000/auth/employee')

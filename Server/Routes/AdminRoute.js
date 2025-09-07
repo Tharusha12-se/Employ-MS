@@ -1,6 +1,9 @@
 import express from "express";
 import con from "../utils/db.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import multer from "multer";
+import path from "path";
 
 const router = express.Router();
 
@@ -35,6 +38,52 @@ router.post('/add_category', (req, res) => {
 //get category
 router.get('/category', (req, res) => {
     const sql = "SELECT * FROM category"
+     con.query(sql, (err, result) => {
+        if(err) return res.json({Status: false, Error: "Query Error"})
+        return res.json({Status: true, Result: result})
+     })
+})
+
+//image upload
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'Public/Image')
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.fieldname + "_" + Date.now() + path.extname(file.originalname))
+    }
+})
+
+const upload = multer({
+    storage : storage
+})
+
+// Add Employee
+router.post('/add_employee',upload.single('image'), (req, res) => {
+    const sql = "INSERT INTO employee (name, email, password, salary, address, image, category_id) VALUES (?)";
+    bcrypt.hash(req.body.password.toString(), 10, (err, hash) => {
+        if(err) return res.json({Status: false, Error: "Query Error"})
+            
+            const values = [
+                req.body.name,
+                req.body.email,
+                hash,
+                req.body.salary,
+                req.body.address,
+                req.file.filename,
+                req.body.category_id
+            ]
+            con.query(sql, [values], (err, result) => {
+                if(err) return res.json({Status: false, Error: "Query Error"})
+                    console.log(err)
+                return res.json({Status: true, Result: result})
+            })
+        })
+})
+
+//get employee
+router.get('/employee', (req, res) => {
+    const sql = "SELECT * FROM employee"
      con.query(sql, (err, result) => {
         if(err) return res.json({Status: false, Error: "Query Error"})
         return res.json({Status: true, Result: result})

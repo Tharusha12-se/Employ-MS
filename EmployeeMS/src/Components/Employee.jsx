@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 
@@ -6,6 +6,7 @@ const Employee = () => {
   const [employee, setEmployee] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
     axios.get('http://localhost:3000/auth/employee')
@@ -25,6 +26,18 @@ const Employee = () => {
         setLoading(false)
       })
   }, [])
+
+  const handleDelete = (id) => {
+      axios.delete('http://localhost:3000/auth/delete_employee/'+id)
+      .then(result => {
+        if(result.data.Status){
+          alert("Employee delete successfully!");
+            window.location.reload()
+        }else{
+          alert(result.data.Error)
+        }
+      })
+  }
 
   if (loading) {
     return <div className='px-5 mt-3'>Loading employees...</div>
@@ -46,14 +59,14 @@ const Employee = () => {
       </div>
       <Link to='/dashboard/add_employee' className='btn btn-success mb-3'>Add Employee</Link>
 
- <div className='mt-3'>
-        <table className='table table-striped '>
+      <div className='mt-3'>
+        <table className='table table-striped'>
           <thead>
             <tr>
               <th>Image</th>
               <th>Name</th>
               <th>Email</th>
-              <th>Salari</th>
+              <th>Salary</th>
               <th>Address</th>
               <th>Action</th>
             </tr>
@@ -62,27 +75,38 @@ const Employee = () => {
           <tbody>
             {employee.length > 0 ? (
               employee.map(e => (
-                <tr>
-                  <td><img src={`http://localhost:3000/Image/`+e.image} className='employeeImage' /></td>
+                <tr key={e.id}>
+                  <td>
+                    <img 
+                      src={`http://localhost:3000/Image/${e.image}`} 
+                      className='employeeImage' 
+                      alt={e.name}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'inline';
+                      }}
+                    />
+                    <span style={{display: 'none'}}>No image</span>
+                  </td>
                   <td>{e.name}</td>
                   <td>{e.email}</td>
-                  <td>{e.salary}</td>
+                  <td>${e.salary}</td>
                   <td>{e.address}</td>
                   <td>
-                    <button className='btn btn-info btn-sm me-2'>Edit</button>
-                    <button className='btn btn-warning  btn-sm'>Delete</button>
+                    <Link to={`/dashboard/edit_employee/${e.id}`} className='btn btn-info btn-sm me-2'>Edit</Link>
+                    <button className='btn btn-warning btn-sm' 
+                    onClick={() => handleDelete(e.id)}>Delete</button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="2" className='text-center'>No categories found</td>
+                <td colSpan="6" className='text-center'>No employees found</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-      
     </div>
   )
 }

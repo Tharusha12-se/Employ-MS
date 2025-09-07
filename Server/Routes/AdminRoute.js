@@ -14,12 +14,12 @@ router.post('/adminlogin', (req, res) => {
         if (result.length > 0) {
             const email = result[0].email;
             const token = jwt.sign(
-                { role: "admin", email: email }, 
+                { role: "admin", email: email },
                 "jwt_secrey_key",  // Fixed: comma instead of space
                 { expiresIn: '1d' }
             );
             res.cookie('token', token)
-            return res.json({ loginStatus: true})
+            return res.json({ loginStatus: true })
         } else {
             return res.json({ loginStatus: false, Error: "Wrong email and password" })
         }
@@ -30,18 +30,18 @@ router.post('/adminlogin', (req, res) => {
 router.post('/add_category', (req, res) => {
     const sql = "INSERT INTO category (`name`) VALUES (?)";
     con.query(sql, [req.body.category], (err, result) => {
-        if(err) return res.json({Status: false, Error: "Query Error"})
-        return res.json({Status: true})
+        if (err) return res.json({ Status: false, Error: "Query Error" })
+        return res.json({ Status: true })
     })
 })
 
 //get category
 router.get('/category', (req, res) => {
     const sql = "SELECT * FROM category"
-     con.query(sql, (err, result) => {
-        if(err) return res.json({Status: false, Error: "Query Error"})
-        return res.json({Status: true, Result: result})
-     })
+    con.query(sql, (err, result) => {
+        if (err) return res.json({ Status: false, Error: "Query Error" })
+        return res.json({ Status: true, Result: result })
+    })
 })
 
 //image upload
@@ -55,39 +55,81 @@ const storage = multer.diskStorage({
 })
 
 const upload = multer({
-    storage : storage
+    storage: storage
 })
 
 // Add Employee
-router.post('/add_employee',upload.single('image'), (req, res) => {
+router.post('/add_employee', upload.single('image'), (req, res) => {
     const sql = "INSERT INTO employee (name, email, password, salary, address, image, category_id) VALUES (?)";
     bcrypt.hash(req.body.password.toString(), 10, (err, hash) => {
-        if(err) return res.json({Status: false, Error: "Query Error"})
-            
-            const values = [
-                req.body.name,
-                req.body.email,
-                hash,
-                req.body.salary,
-                req.body.address,
-                req.file.filename,
-                req.body.category_id
-            ]
-            con.query(sql, [values], (err, result) => {
-                if(err) return res.json({Status: false, Error: "Query Error"})
-                    console.log(err)
-                return res.json({Status: true, Result: result})
-            })
+        if (err) return res.json({ Status: false, Error: "Query Error" })
+
+        const values = [
+            req.body.name,
+            req.body.email,
+            hash,
+            req.body.salary,
+            req.body.address,
+            req.file.filename,
+            req.body.category_id
+        ]
+        con.query(sql, [values], (err, result) => {
+            if (err) return res.json({ Status: false, Error: "Query Error" })
+            console.log(err)
+            return res.json({ Status: true, Result: result })
         })
+    })
 })
 
 //get employee
 router.get('/employee', (req, res) => {
     const sql = "SELECT * FROM employee"
-     con.query(sql, (err, result) => {
-        if(err) return res.json({Status: false, Error: "Query Error"})
-        return res.json({Status: true, Result: result})
-     })
+    con.query(sql, (err, result) => {
+        if (err) return res.json({ Status: false, Error: "Query Error" })
+        return res.json({ Status: true, Result: result })
+    })
+})
+
+router.get('/employee/:id', (req, res) => {
+    const id = req.params.id;
+    //console.log(id)
+    const sql = "SELECT * FROM employee WHERE id = ?"
+    con.query(sql, [id], (err, result) => {
+        if (err) return res.json({ Status: false, Error: "Query Error" })
+        return res.json({ Status: true, Result: result })
+    })
+})
+
+// for edit employee
+router.put('/edit_employee/:id', (req, res) => {
+    const id = req.params.id;
+    //console.log(id)
+    const sql = `UPDATE employee set name= ?, email = ?, salary = ?, address = ? , category_id = ?
+    Where id =?`
+
+    const values = [
+        req.body.name,
+        req.body.email,
+        req.body.salary,
+        req.body.address,
+        req.body.category_id
+    ]
+
+    con.query(sql, [...values, id], (err, result) => {
+        if (err) return res.json({ Status: false, Error: "Query Error"+err })
+        return res.json({ Status: true, Result: result })
+    })
+
+})
+
+//delete employee
+router.delete('/delete_employee/:id', (req, res) => {
+    const id = req.params.id;
+    const sql = "delete from employee where id =? "
+    con.query(sql, [id], (err, result) => {
+        if (err) return res.json({ Status: false, Error: "Query Error"+err })
+        return res.json({ Status: true, Result: result })
+    })
 })
 
 export { router as adminRouter };
